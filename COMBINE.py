@@ -6,24 +6,24 @@
 #import os
 import MySQLdb
 import datetime
+from datetime import timedelta
 
+
+# bring back print to return after printftests
 def ACLblock (sourceip, destip, timerange):
-	return '''ip access-list 101 deny tcp %s 0.0.0.0 %s 0.0.0.0 %s''' % (sourceip, destip, timerange)
-
-def timebasedACL(startdate, enddate):
-	return '''absolute start 00:00 %s end 24:00 %s''' % (startdate, enddate)
+	print '''ip access-list 101 deny tcp %s 0.0.0.0 %s 0.0.0.0 %s''' % (sourceip, destip, timerange)
 
 def tcplow(startdate, enddate):
-	return '''time-range tcplow
+	print '''time-range tcplow
 			absolute start 00:00 %s end 24:00 %s
 				''' % (startdate, enddate)
 	
 def tcpmedium(startdate, enddate):
-	return '''time-range tcpmedium
+	print '''time-range tcpmedium
 			absolute start 00:00 %s end 24:00 %s
 				''' % (startdate, enddate)
 
-def timerange (attackrate, sourceip, destip):
+def timerange (attackrate, sourceip, destip, startdate, enddate):
 	if attackrate > 1: # high
 		timerangestring = ''' ''';
 		ACLblock(sourceip, destip, timerangestring)
@@ -37,7 +37,7 @@ def timerange (attackrate, sourceip, destip):
 		ACLblock(sourceip, destip, timerangestring)
 	return timerangestring
 
-#class AllowAllKeys(paramiko.MilssingHostKeyPolicy):
+#class AllowAllKeys(paramiko.MissingHostKeyPolicy):
 #    def missing_host_key(self, client, hostname, key):
 #        return
 
@@ -65,7 +65,8 @@ PASSWORD = 's$hi'
 #conf t
 #''')
 
-
+# current date getter
+now = datetime.datetime.now()
 # connect to db
 db = MySQLdb.connect(host="localhost", user="root", passwd="root", db="siera_final")
 
@@ -172,22 +173,25 @@ for row in all_attack_log:
 		metric_id = cursor.fetchone()
 		metric_id = metric_id[0]
 
-
-
-
 # check if acl block required
 		cursor.execute("select acl_block from metric_conjunction WHERE role_id='"+str(role_id)+"' and attack_rate_id='"+str(attack_rate_id)+"' and protocol_type='"+str(protocol_type)+"'")
 		acl_block_present = cursor.fetchone()
 		acl_block_present = acl_block_present[0]
 
 		if acl_block_present == 1:
-			# acl response before insert in table to get time delay
+# acl response is here, before insert in response table and time based table to get time delay in stress test
+# remove # after this line when testing na 
+			if attack_rate < 0.5:
+				end_date = now + timedelta(days=num_days_low)
+			elif attack_rate < 1 and attack_rate >= 0.5:
+				end_date = now + timedelta(days=num_days_medium)
+	
 			#stdin.write(timerange (attack_rate, source_ip, destination_ip))
-			print "insert an acl"
+			
+			print timerange (attack_rate, source_ip, destination_ip, str(now.strftime('%d %B %Y')), str(end_date.strftime('%d %B %Y')))
 		
 
 		#print metric_id
-
 		# check there is existing response id
 		cursor.execute("select response_id from response where persistence_id="+str(persistence_id))
 		response_id=cursor.fetchall()
