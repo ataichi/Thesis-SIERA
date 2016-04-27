@@ -15,12 +15,12 @@ def ACLblock (sourceip, destip, timerange):
 
 def tcplow(startdate, enddate):
 	print '''time-range tcplow
-			absolute start 00:00 %s end 24:00 %s
+			absolute start 00:00:00 %s end 24:00:00 %s
 				''' % (startdate, enddate)
 	
 def tcpmedium(startdate, enddate):
 	print '''time-range tcpmedium
-			absolute start 00:00 %s end 24:00 %s
+			absolute start 00:00:00 %s end 24:00:00 %s
 				''' % (startdate, enddate)
 
 def timerange (attackrate, sourceip, destip, startdate, enddate):
@@ -188,7 +188,7 @@ for row in all_attack_log:
 	
 			#stdin.write(timerange (attack_rate, source_ip, destination_ip))
 			
-			print timerange (attack_rate, source_ip, destination_ip, str(now.strftime('%d %B %Y')), str(end_date.strftime('%d %B %Y')))
+			print timerange (attack_rate, source_ip, destination_ip, str(now.strftime('%d %m %Y')), str(end_date.strftime('%d %B %Y')))
 		
 
 		#print metric_id
