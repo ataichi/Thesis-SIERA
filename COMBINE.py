@@ -9,9 +9,30 @@ import datetime
 from datetime import timedelta
 
 
+# ingress filtering
+def defaultACL():
+	print '''int f0/0
+		ip access-group out_to_in in'''
+
+# no need. current acl will be the only one put to the interface.
+#def noACL():
+#	print '''int f0/0
+#		no ip access-group out_to_in in'''
+
+#if may name kaya iremove per line.. if numbered acl mabubura whole acl
+def tempACL():
+	print '''ip access-list extended tempout_to_in in 
+		permit tcp any host 209.165.164.163
+		'''
+
+def insertTempACL():
+	print '''int f0/0
+		ip access-group tempout_to_in in'''
+
 # bring back print to return after printftests
 def ACLblock (sourceip, destip, timerange):
-	print '''ip access-list 101 deny tcp %s 0.0.0.0 %s 0.0.0.0 %s''' % (sourceip, destip, timerange)
+	print '''ip access-list extended out_to_in 
+		deny tcp %s 0.0.0.0 %s 0.0.0.0 time-range %s''' % (sourceip, destip, timerange)
 
 def tcplow(startdate, enddate):
 	print '''time-range tcplow
