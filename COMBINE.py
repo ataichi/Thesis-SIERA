@@ -4,11 +4,17 @@ import sys
 #sys.stderr = open('/dev/null')       # Hides warnings - paramiko
 #import paramiko as paramiko
 #sys.stderr = sys.__stderr__
-#import os
+import os
 import MySQLdb
 
 import datetime
 from datetime import timedelta, time
+
+#filename = '/home/siera/Desktop/pexpect.py'
+def file_get_contents(filename):
+    with open(filename) as f:
+        return f.read()
+
 
 # for GUI
 #top = Tkinter.Tk()
@@ -21,13 +27,13 @@ from datetime import timedelta, time
 
 # call this function for the unblock page
 def unblock(ACLentry):
-	return stdin.write('''ip access-list extended out_to_in 
+	stdin.write('''ip access-list extended out_to_in 
 no %s''' % ACLentry)
 
 # ingress filtering
 def defaultACL():
-	print '''int f0/0
-ip access-group out_to_in in'''
+	stdin.write('''int f0/0
+ip access-group out_to_in in''')
 
 # no need. current acl will be the only one put to the interface.
 #def noACL():
