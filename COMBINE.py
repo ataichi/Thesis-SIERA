@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import Tkinter
 import sys
 #sys.stderr = open('/dev/null')       # Hides warnings - paramiko
 #import paramiko as paramiko
@@ -9,6 +10,19 @@ import MySQLdb
 import datetime
 from datetime import timedelta, time
 
+# for GUI
+#top = Tkinter.Tk()
+#B = Tkinter.Button(top, text ="Unblock")
+
+#B.pack()
+#top.mainloop()
+
+
+
+# call this function for the unblock page
+def unblock(ACLentry):
+	return stdin.write('''ip access-list extended out_to_in 
+no %s''' % ACLentry)
 
 # ingress filtering
 def defaultACL():
@@ -103,9 +117,6 @@ cursor = db.cursor()
 #numdays=cursor.fetchall()
 #for row1 in numdays:
 #	interval = row1[0]
-
-pivot = 0
-
 
 
 # get num_days low attack
@@ -232,7 +243,6 @@ while (1):
 			if acl_block_present == 1:
 	# remove # after this line when testing na 
 				#stdin.write(timerange (attack_rate_id, source_ip, destination_ip, str(now.strftime('%d %m %Y'))))
-			
 				timerange (attack_rate_id, source_ip, destination_ip, str(now.strftime('%d %m %Y')))
 		
 
@@ -286,4 +296,4 @@ while (1):
 					cursor.execute("insert into permanent_block (response_id, is_block, last_modified) values (" + str(x[0]) + ", 1, CURRENT_TIMESTAMP)")
 					db.commit()
 				
-
+				
