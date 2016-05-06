@@ -1,10 +1,10 @@
 #!/usr/bin/python
 import base64
-#import Tkinter
+import Tkinter
 import sys
-#sys.stderr = open('/dev/null')       # Hides warnings - paramiko
-#import paramiko as paramiko
-#sys.stderr = sys.__stderr__
+sys.stderr = open('/dev/null')       # Hides warnings - paramiko
+import paramiko as paramiko
+sys.stderr = sys.__stderr__
 import os
 import MySQLdb
 
@@ -152,15 +152,15 @@ print tcpmedium(startdate, end_date.strftime('%d %B %Y'))
 while (1):
 	db = MySQLdb.connect(host="localhost", user="root", passwd="root", db="siera_final")
 	cursor = db.cursor()
-
-	try:
+	# do not remove try except. It's for real time handling inserts from db.
+	try:	# getting new logs within timerange 
 		cursor.execute("select response_id from response order by response_id desc limit 1")
 		pivot = cursor.fetchone()
 		pivot = pivot[0]
 		cursor.execute("SELECT al.attack_log_id, al.timestamp, al. source_ip, al.source_port, al.destination_ip, al.destination_port, al.attack_id, al.role_id FROM attack_log al, time_persistence_interval tpi where al.timestamp < date_add(al.timestamp, interval tpi.interval_number day) and al.attack_log_id > "+ str(pivot) + ";")
-	except:
+	except: # initial logs get
 		e = sys.exc_info()[0]
-	# select ALL attacks within timerange
+		# select ALL attacks within timerange
 		cursor.execute("SELECT al.attack_log_id, al.timestamp, al. source_ip, al.source_port, al.destination_ip, al.destination_port, al.attack_id, al.role_id FROM attack_log al, time_persistence_interval tpi where al.timestamp < date_add(al.timestamp, interval tpi.interval_number day);")
 
 	all_attack_log=cursor.fetchall()
@@ -175,7 +175,6 @@ while (1):
 		attack_id=row[6]
 		role_id=row[7]
 			 
-		#print source_ip
 		cursor.execute("set @date = (select timestamp from attack_log where attack_log_id="+str(attack_log_id)+ "); ")
 		cursor.execute("select count(al.attack_id) from attack_log al, time_persistence_interval tpi where al.timestamp between date_sub(@date, interval tpi.interval_number day) and @date " + "and al.source_ip='"+ str(source_ip) + "' and al.attack_log_id<"+str(attack_log_id) +" and al.attack_id=" +str(attack_id))
 		persistence_list=cursor.fetchall()
@@ -190,7 +189,6 @@ while (1):
 			if len(check_entry)==0:
 				a = "insert into attack_persistence (attack_log_id, persistence_count) values (" + str(attack_log_id) + ", " + str(value) + ")"
 				cursor.execute(a)
-				#print a 
 				db.commit()
 
 			# compute for attack_rate
@@ -200,10 +198,9 @@ while (1):
 			timestamp = interval_record[1]
 			interval = interval_record[2]
 
-			# attack rate value
+			# attack rate value computation
 			attack_rate = float(value)/float(interval)
 
-			#print attack_rate
 			# persistence_id
 			cursor.execute("select persistence_id from attack_persistence where attack_log_id=" + str(attack_log_id) )
 			persistence_id = cursor.fetchone()
@@ -214,25 +211,21 @@ while (1):
 			attack_rate_id = cursor.fetchone()
 			attack_rate_id = attack_rate_id[0]
 			
-			# print str(attack_rate_id)
 			# get protocol_type
 			cursor.execute("select protocol_type from attack where attack_id=" + str(attack_id) )
 			protocol_type = cursor.fetchone()
 			protocol_type = protocol_type[0]
 
-			response = 0
-			metric_id=0
-
 			cursor.execute("select metric_id from metric_conjunction where role_id='"+str(role_id)+"' and attack_rate_id='"+str(attack_rate_id)+"' and protocol_type='"+str(protocol_type)+"'")
 			metric_id = cursor.fetchone()
 			metric_id = metric_id[0]
 
-	# check if acl block required
+			# check if acl block required
 			cursor.execute("select acl_block from metric_conjunction WHERE role_id='"+str(role_id)+"' and attack_rate_id='"+str(attack_rate_id)+"' and protocol_type='"+str(protocol_type)+"'")
 			acl_block_present = cursor.fetchone()
 			acl_block_present = acl_block_present[0]
 
-	#check time if have to renew timeranges in every attack responded and create new timeranges if necessary
+#check time if have to renew timeranges in every attack responded and create new timeranges if necessary
 			startdate = str(now.strftime('%d %m %Y'))
 			now_time = now.time()
 			if now_time >= time(23,59): 
@@ -247,17 +240,13 @@ while (1):
 # remove # after this line when testing na 
 				#stdin.write(timerange (attack_rate_id, source_ip, destination_ip, str(now.strftime('%d %m %Y'))))
 				timerange (attack_rate_id, source_ip, destination_ip, str(now.strftime('%d %m %Y')))
-		
 
-			#print metric_id
 			# check there is existing response id
 			cursor.execute("select response_id from response where persistence_id="+str(persistence_id))
 			response_id=cursor.fetchall()
 		
-
-	#what is the checking of length of response id for?
-			if len(response_id)==0:
-				#print "NEW"
+			if len(response_id)==0: # length is 0 if there's no retrieved row from db 
+				# "NEW" 
 				cursor.execute("insert into response (timestamp, persistence_id, interval_id, attack_rate_id, metric_id, status) values (CURRENT_TIMESTAMP, " + str(persistence_id) + ", " + str(interval_id) + ", " + str(attack_rate_id) + " , " + str(metric_id) + ", '0' )")
 				db.commit()
 			
@@ -280,7 +269,6 @@ while (1):
 					# create 5 Days ACL
 					cursor.execute("insert into time_based (response_id, num_days, block_start, block_end) values (" + str(x[0]) + "," + str(time_based_range_id_medium) + ", NOW(), DATE_ADD(NOW(), INTERVAL " + str(num_days_medium) + " DAY) )")
 					db.commit()
-
 				else: # metric_id = 3, 4, 5, 6, 9, 10, 11, 12 (ACL Block)
 					cursor.execute("insert into permanent_block (response_id, is_block, last_modified) values (" + str(x[0]) + ", 1, CURRENT_TIMESTAMP)")
 					db.commit()
