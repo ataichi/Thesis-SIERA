@@ -1,5 +1,6 @@
 #!/usr/bin/python
-import Tkinter
+import base64
+#import Tkinter
 import sys
 #sys.stderr = open('/dev/null')       # Hides warnings - paramiko
 #import paramiko as paramiko
@@ -15,15 +16,11 @@ def file_get_contents(filename):
     with open(filename) as f:
         return f.read()
 
-
 # for GUI
 #top = Tkinter.Tk()
 #B = Tkinter.Button(top, text ="Unblock")
-
 #B.pack()
 #top.mainloop()
-
-
 
 # call this function for the unblock page
 def unblock(ACLentry):
@@ -247,7 +244,7 @@ while (1):
 				print tcpmedium(startdate, end_date.strftime('%d %B %Y'))
 
 			if acl_block_present == 1:
-	# remove # after this line when testing na 
+# remove # after this line when testing na 
 				#stdin.write(timerange (attack_rate_id, source_ip, destination_ip, str(now.strftime('%d %m %Y'))))
 				timerange (attack_rate_id, source_ip, destination_ip, str(now.strftime('%d %m %Y')))
 		
@@ -270,30 +267,16 @@ while (1):
 				for x in response_id:
 					x = response_id[0]
 
-				if metric_id==1: # tcp reset + 2 days
+				if metric_id == 1 or metric_id == 2: # tcp reset + 2 days
 					# create TCP Reset
 					cursor.execute("insert into tcp_reset (response_id) values (" + str(x[0]) + ")")
 					db.commit()
 
+				if metric_id == 1 or metric_id == 7:
 					# create 2 Days ACL
 					cursor.execute("insert into time_based (response_id, num_days, block_start, block_end) values (" + str(x[0]) + ", " + str(time_based_range_id_low) + ", NOW(), DATE_ADD(NOW(), INTERVAL " + str(num_days_low) + " DAY) )")
 					db.commit()
-	
-				elif metric_id==2: # tcp reset + 5 days
-					# create TCP Reset
-					cursor.execute("insert into tcp_reset (response_id) values (" + str(x[0]) + ")")
-					db.commit()
-
-					# create 5 Days ACL
-					cursor.execute("insert into time_based (response_id, num_days, block_start, block_end) values (" + str(x[0]) + "," + str(time_based_range_id_medium) + ", NOW(), DATE_ADD(NOW(), INTERVAL " + str(num_days_medium) + " DAY) )")
-					db.commit()
-	
-				elif metric_id==7: # 2 days
-					# create 2 Days ACL
-					cursor.execute("insert into time_based (response_id, num_days, block_start, block_end) values (" + str(x[0]) + ", " + str(time_based_range_id_low) + ", NOW(), DATE_ADD(NOW(), INTERVAL " + str(num_days_low) + " DAY) )")
-					db.commit()
-
-				elif metric_id==8: # 5 days
+				elif metric_id == 2 or metric_id == 8: # 5 days
 					# create 5 Days ACL
 					cursor.execute("insert into time_based (response_id, num_days, block_start, block_end) values (" + str(x[0]) + "," + str(time_based_range_id_medium) + ", NOW(), DATE_ADD(NOW(), INTERVAL " + str(num_days_medium) + " DAY) )")
 					db.commit()
