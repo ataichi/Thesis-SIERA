@@ -22,14 +22,20 @@ def file_get_contents(filename):
 #B.pack()
 #top.mainloop()
 
+def insertTempACL():
+	print '''int f0/0
+ip access-group tempout_to_in in'''
+
 # call this function for the unblock page
 def unblock(ACLentry):
-	stdin.write('''ip access-list extended out_to_in 
-no %s''' % ACLentry)
+	insertTempACL()
+	print '''ip access-list extended out_to_in 
+no %s''' % (ACLentry)
 
 # ingress filtering
 def defaultACL():
-	stdin.write('''int f0/0
+	print ('''int f0/0
+no ip access-group out_to_in in
 ip access-group out_to_in in''')
 
 # no need. current acl will be the only one put to the interface.
@@ -43,14 +49,11 @@ def tempACL():
 permit tcp any host 209.165.164.163
 '''
 
-def insertTempACL():
-	print '''int f0/0
-ip access-group tempout_to_in in'''
-
 # bring back print to return after printftests
 def ACLblock (sourceip, destip, timerange):
-	return '''ip access-list extended out_to_in 
+	print '''ip access-list extended out_to_in 
 deny tcp %s 0.0.0.0 %s 0.0.0.0 %s''' % (sourceip, destip, timerange)
+	defaultACL()
 
 def tcplow(startdate, enddate):
 	return '''time-range tcplow
@@ -74,8 +77,9 @@ def timerange (attack_rate_id, sourceip, destip, startdate):
 		#end_date = now + timedelta(days=num_days_medium)
 		timerangestring = '''time-range tcpmedium''';
 		#tcpmedium(startdate, str(end_date.strftime('%d %B %Y')))
-	timerangestring = ACLblock(sourceip, destip, timerangestring)
-	print timerangestring
+	#timerangestring = 
+	ACLblock(sourceip, destip, timerangestring)
+	#print timerangestring
 
 #class AllowAllKeys(paramiko.MissingHostKeyPolicy):
 #    def missing_host_key(self, client, hostname, key):
@@ -155,13 +159,13 @@ while (1):
 	# do not remove try except. It's for real time handling inserts from db.
 	try:	# getting new logs within timerange 
 		cursor.execute("select response_id from response order by response_id desc limit 1")
-		pivot = cursor.fetchone()
-		pivot = pivot[0]
-		cursor.execute("SELECT al.attack_log_id, al.timestamp, al. source_ip, al.source_port, al.destination_ip, al.destination_port, al.attack_id, al.role_id FROM attack_log al, time_persistence_interval tpi where al.timestamp < date_add(al.timestamp, interval tpi.interval_number day) and al.attack_log_id > "+ str(pivot) + ";")
+		responsepivot = cursor.fetchone()
+		responsepivot = responsepivot[0]
+		cursor.execute("SELECT al.attack_log_id, al.timestamp, al. source_ip, al.source_port, al.destination_ip, al.destination_port, al.attack_id, al.role_id FROM attack_log al WHERE al.attack_log_id > "+ str(responsepivot) + ";")
 	except: # initial logs get
 		e = sys.exc_info()[0]
 		# select ALL attacks within timerange
-		cursor.execute("SELECT al.attack_log_id, al.timestamp, al. source_ip, al.source_port, al.destination_ip, al.destination_port, al.attack_id, al.role_id FROM attack_log al, time_persistence_interval tpi where al.timestamp < date_add(al.timestamp, interval tpi.interval_number day);")
+		cursor.execute("SELECT al.attack_log_id, al.timestamp, al.source_ip, al.source_port, al.destination_ip, al.destination_port, al.attack_id, al.role_id FROM attack_log al;")
 
 	all_attack_log=cursor.fetchall()
 
