@@ -1,0 +1,36 @@
+hostname R1
+enable secret class
+username adminssh password s$hi
+ip domain name cisco.com
+crypto key generate rsa 1024
+line vty 0 4
+no privilege level 15
+login local
+transport input ssh
+
+int f0/1
+ip add 64.100.251.254 255.255.255.0
+no shut
+
+
+
+
+SW
+ip default-gateway 192.168.2.1
+int vlan 1
+no shut
+
+
+
+
+
+
+
+
+sudo python tcpreset.py -D 127.0.0.1 -d 5000 -S 127.0.0.1 -s 43474
+43474 - after running client.py
+
+sudo python tcpreset.py -D 64.100.201.6 -d 51555 -S 64.100.251.5 -s 5000
+sudo python tcpreset.py -S sieraip -s sieraport -D attackerip -d attackerport
+
+mysqldump -u [username] -p [database name] > [database name].sql
